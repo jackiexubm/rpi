@@ -1,5 +1,6 @@
 import RPi.GPIO as GPIO
 import time
+from threading import Thread
 
 GPIO.setmode(GPIO.BCM)
 
@@ -25,24 +26,25 @@ seq = [
     [1, 0, 0, 1],
 ]
 
-try:
-    for i in range(100):
-        for halfstep in range(8):
-            for pin in range(4):
-                GPIO.output(motor1[pin], seq[halfstep][pin])
-            print(i)
-            time.sleep(0.001)
+def rotate(motor, angle):
+    def _helper():
+        n_steps = int(angle / 360.0 * 512)
+        for i in range(n_steps):
+            for halfstep in range(8):
+                for pin in range(4):
+                    GPIO.output(motor[pin], seq[halfstep][pin])
+                time.sleep(0.001)
+                print(i)
+    # use threads to make rotations asynchronous
+    Thread(target=_helper).start()
 
-    for j in range(100):
-        for halfstep in range(8):
-            for pin in range(4):
-                GPIO.output(motor2[pin], seq[halfstep][pin])
-            print(i)
-            time.sleep(0.001)
+try:
+    rotate(motor1, 360)
+    rotate(motor2, 360)
 
 except KeyboardInterrupt:
     raise
 except:
     GPIO.cleanup()
 
-GPIO.cleanup()
+# GPIO.cleanup()

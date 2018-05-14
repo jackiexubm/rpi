@@ -26,25 +26,41 @@ seq = [
     [1, 0, 0, 1],
 ]
 
+def clear(motor):
+    for i in range(4):
+        GPIO.output(motor[i], 0)
+        GPIO.output(motor[i], 0)
+
 def rotate(motor, angle):
-    def _helper():
-        n_steps = int(angle / 360.0 * 512)
-        for i in range(n_steps):
-            for halfstep in range(8):
-                for pin in range(4):
-                    GPIO.output(motor[pin], seq[halfstep][pin])
-                time.sleep(0.001)
-                print(i)
-    # use threads to make rotations asynchronous
-    Thread(target=_helper).start()
+    if (angle > 0):
+        def _ccw():
+            n_steps = int(angle / 360.0 * 512)
+            for i in range(n_steps):
+                for halfstep in range(8):
+                    for pin in range(4):
+                        GPIO.output(motor[pin], seq[halfstep][pin])
+                    time.sleep(0.001)
+            clear(motor)
+        Thread(target=_ccw).start()
+    else:
+        def _cw():
+            n_steps = int(angle * -1.0 / 360.0 * 512)
+            print(n_steps)
+            for i in range(n_steps):
+                for halfstep in range(8):
+                    for pin in range(4):
+                        GPIO.output(motor[pin], seq[7 - halfstep][pin])
+                    time.sleep(0.001)
+            clear(motor)
+        Thread(target=_cw).start()
+
 
 try:
-    rotate(motor1, 360)
-    rotate(motor2, 360)
+    rotate(motor1, 160)
+    rotate(motor2, -160)
 
 except KeyboardInterrupt:
     raise
 except:
-    GPIO.cleanup()
-
+    pass
 # GPIO.cleanup()
